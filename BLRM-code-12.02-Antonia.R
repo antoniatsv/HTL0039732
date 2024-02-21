@@ -21,7 +21,7 @@ d <- c(80, 80, 160, 160)
 D.ref <- 960
 #binary indicator I (0=montherapy, 1 = combination therapy)
 #I.combo <- c(0,0,0,0)
-#I.combo <- c(rep(0, length(d)), rep(1, length(d)))
+I.combo <- c(rep(0, length(doses)), rep(1, length(doses)))
 
 #vector of prior means 
 mu0 <- -1.75
@@ -54,6 +54,7 @@ blrm.data <- list(
   d = d,
   N = N,
   priorPrec = priorPrec,
+  I.combo = I.combo,
   priorMean = priorMean
 )
 
@@ -72,7 +73,7 @@ model {
 
   ## Likelihood ##
   for (j in 1:N) {
-    lin.pred.p.1[j] <- alpha0 + alpha1 * log(d[j]/D.ref)
+    lin.pred.p.1[j] <- alpha0 + alpha1 * log(d[j]/D.ref) + alpha2 * I.combo[j]
     lin.pred.p.2[j] <- ifelse(lin.pred.p.1[j] < -10, -10, ifelse(lin.pred.p.1[j] > 10, 10, lin.pred.p.1[j]))
     p[j] <- exp(lin.pred.p.2[j]) / (1 + exp(lin.pred.p.2[j])) 
     s[j] ~ dbern(p[j])
@@ -99,7 +100,7 @@ all.Pi <-mat.or.vec(iter,length(doses))
 allstop <-0
 
 for (j in 1:length(doses)) {
-  LP <- a01 + a11 * log(doses[j]/D.ref)
+  LP <- a01 + a11 * log(doses[j]/D.ref) + a21 * I.combo[j]
   #make sure LP stays between -10 and 10
   LP <- pmin(pmax(LP, -10), 10)
   #calculate the odds
@@ -133,3 +134,21 @@ LCI.mono <- LCI[1:length(doses)]
 UCI.mono <- UCI[1:length(doses)]
 
 ###
+
+# vectors for COMBO
+Pi.MTD.combo <- Pi.MTD[(length(doses)+1):(2*length(doses))]
+Pi.MTD.combo.store<-Pi.MTD.store[(length(doses)+1):(2*length(doses))]
+Pi.above.combo<-Pi.above[(length(doses)+1):(2*length(doses))]
+toxicity.combo<-toxicity[(length(doses)+1):(2*length(doses))]
+n.combo<-n.patients.per.dose[(length(doses)+1):(2*length(doses))]
+s.combo<-s[(length(doses)+1):(2*length(doses))]
+LCI.combo<-LCI[(length(doses)+1):(2*length(doses))]
+UCI.combo<-UCI[(length(doses)+1):(2*length(doses))]
+
+
+###############################################################
+
+
+
+
+
