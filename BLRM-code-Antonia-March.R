@@ -52,7 +52,6 @@ no.DLT = c(0,0,0,0)
 #####
 
 
-
 ############################################################################################################
 
 blrm.data <- list(
@@ -168,7 +167,6 @@ UCI.combo<-UCI[(length(doses)+1):(2*length(doses))]
 
 ###############################################################
 
-
 # Initialize variables for next dose recommendation and admissible doses
 next.dose.mono <- next.dose.combo <- 0
 admissible.doses.mono <- admissible.doses.combo <- numeric(0)
@@ -198,9 +196,6 @@ if(all(Pi.MTD.mono == 0) & all(Pi.MTD.combo == 0)){
     admissible.doses.combo <- next.dose.combo <- 0
   }
 }
-
-
-
 
 
 prediction = FALSE
@@ -253,11 +248,10 @@ if(!prediction){
     Data.Combo = n.combo,
     Lower.Combo = LCI.combo,
     Upper.Combo = UCI.combo,
-    # Add predictions if they were part of your analysis
-    Target.Prob.Predict = Pi.MTD.predict, # Assuming you have this variable
-    Overdose.Predict = Pi.above.predict, # Assuming you have this variable
-    Tox.Est.Predict = toxicity.predict, # Assuming you have this variable
-    Admissible.Doses.Predict = admissible.doses.predict # Assuming you have this variable
+    Target.Prob.Predict = Pi.MTD.predict, 
+    Overdose.Predict = Pi.above.predict, 
+    Tox.Est.Predict = toxicity.predict, 
+    Admissible.Doses.Predict = admissible.doses.predict 
   )
 }
 
