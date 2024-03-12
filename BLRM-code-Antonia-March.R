@@ -47,7 +47,7 @@ total.iter <- iter.per.chain + burn.in
 #overdose probability threshold
 c.overdose<-0.40 
 #number of DLTs on the current dose levels per each patient 
-no.DLT = c(0,0,0,0)
+no.DLT = c(0,0,0,0,0)
 
 #####
 
@@ -63,7 +63,6 @@ blrm.data <- list(
   I.combo = I.combo,
   priorMean = priorMean
 )
-
 
 
 # Model specification for JAGS
@@ -167,23 +166,23 @@ UCI.combo<-UCI[(length(doses)+1):(2*length(doses))]
 
 ###############################################################
 
-# Initialize variables for next dose recommendation and admissible doses
+# Initialise variables for next dose recommendation and admissible doses
 next.dose.mono <- next.dose.combo <- 0
 admissible.doses.mono <- admissible.doses.combo <- numeric(0)
 
 # Decision logic based on MTD probabilities and overdose probabilities
 if(all(Pi.MTD.mono == 0) & all(Pi.MTD.combo == 0)){
-  # If no dose levels are considered admissible for both mono and combo therapy
+  # If no dose levels are considered admissible for both mono and combo therapy, set stop to 1 and reset the next dose and admissible doses variables to 0
   stop <- 1
   next.dose.mono <- next.dose.combo <- 0
   admissible.doses.mono <- admissible.doses.combo <- 0
 } else {
   # Process for monotherapy
-  if(any(Pi.MTD.mono > 0)){
+  if(any(Pi.MTD.mono > 0)){ #if any MTD prob for mono is >0, then find admissible doses and the next dose based on the maximum MTD prob
     admissible.doses.mono <- doses[which(Pi.MTD.mono > 0)]
     next.dose.mono <- doses[which.max(Pi.MTD.mono)]
   }
-  if(all(Pi.MTD.mono == 0)){
+  if(all(Pi.MTD.mono == 0)){ #if all MTD probs are 0, then set the admissible doses and next dose for monotherapy to 0
     admissible.doses.mono <- next.dose.mono <- 0
   }
   
@@ -197,6 +196,15 @@ if(all(Pi.MTD.mono == 0) & all(Pi.MTD.combo == 0)){
   }
 }
 
+
+################################################################################
+# At the minute I don't have coherence constraints and no dose skipping! 
+# I need to write the logic on adjusting the next dose recommendation based on 
+# the presence of DLTs. 
+#                                                                              
+#                                                                              
+#                                                                              
+################################################################################
 
 prediction = FALSE
 
@@ -294,3 +302,61 @@ write.csv(output.table.combo, "Combination-SRC-Meeting-07.03.Results.csv", row.n
 
 
 ########
+
+####
+# Print Results Table in Latex Format (with colour coding)
+####
+output.table.mono.colour<-output.table.mono
+
+
+for(ii in 1:length(doses)){
+  ttext<-output.table.mono[1,ii]
+  if(example$Overdose.Mono[ii]>c.overdose){
+    colour.name<-"coralred"
+  }else{
+    
+    if(example$Target.Prob.Const.Mono[ii]==0){
+      colour.name<-"azure"
+    }else{
+      colour.name<-"brightgreen"
+    }
+    
+  }
+  
+  ttext.col<-paste0("\\cellcolor{", colour.name, "}", ttext)
+  output.table.mono.colour[1,ii]<-ttext.col
+}
+
+
+
+
+library("xtable")
+# Print Results Table in Latex Format (with colour coding)
+# Monotherapy
+print(xtable(output.table.mono.colour), sanitize.text.function = identity,include.rownames=FALSE,include.colnames=FALSE, size="\\tiny")
+
+# Generate a pdf with the colour-coded table
+# Requires Latex installed
+latex<-print(xtable(output.table.mono.colour,), sanitize.text.function = identity,include.rownames=FALSE,include.colnames=FALSE, size="\\normalsize")
+writeLines(
+  c(
+    "\\documentclass[12pt]{article}",
+    "\\usepackage[landscape,left=10mm,right=20mm,top=60mm,bottom=20mm]{geometry}",
+    "\\usepackage[table]{xcolor}",
+    "\\usepackage{color}",
+    "\\definecolor{azure}{rgb}{0.0, 0.5, 1.0}",
+    "\\definecolor{brightgreen}{rgb}{0.4, 1.0, 0.0}",
+    "\\definecolor{coralred}{rgb}{1.0, 0.25, 0.25}",
+    "\\begin{document}",
+    "\\thispagestyle{empty}",
+    latex,
+    "\\end{document}"
+  ),
+  "table.tex"
+)
+
+
+
+
+
+
