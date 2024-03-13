@@ -3,6 +3,7 @@ library(rjags)
 library(runjags)
 library(purrr)
 library(dplyr)
+library("xtable")
 
 
 #dose levels 
@@ -170,24 +171,27 @@ prediction = FALSE
 current.dose <- doses[4]
 
 # Decision logic based on MTD probabilities and overdose probabilities
-if(all(Pi.MTD.mono == 0) & all(Pi.MTD.combo == 0)){
+if(all(Pi.MTD==0)){
   # If no dose levels are considered admissible for both mono and combo therapy, set stop to 1 and reset the next dose and admissible doses variables to 0
   stop <- 1
   next.dose.mono <- next.dose.combo <- 0
   admissible.doses.mono <- admissible.doses.combo <- c(0)
 } else {
+  
   if(sum(s.mono)>0) {
     increment<-2
   }else{
     increment<-3
   }
   
+  ##coherence constraint
   if(all((no.DLT/N)>=1/3 & coherence.up)){
     index <- which(doses>doses[current.dose])
     Pi.MTD.mono[index]<-0
   }else{
+    #no dose skip
     if(current.dose<(length(doses)-1)){
-      index <- (current.dose+2):length(doses)
+      index <-(current.dose+2):length(doses)
       Pi.MTD.mono[index]<-0
     }
   }
@@ -318,8 +322,8 @@ output.table.mono[2,] <- paste("n=", example$Data.Mono, sep="")
 output.table.mono[3,] <- paste("DLTs=", example$DLTs.Mono, sep="")
 output.table.mono[4,] <- paste("Mean Tox=", round(example$Toxicity.Est.Mono, 2), sep="")
 output.table.mono[5,] <- paste("95% CI=(", round(example$Lower.Mono, 2), ",", round(example$Upper.Mono, 2), ")", sep="")
-output.table.mono[6,] <- paste("Overdose=", round(100 * example$Overdose.Mono), "%", sep="")
-output.table.mono[7,] <- paste("Target=", round(100 * example$Target.Prob.Mono), "%", sep="")
+output.table.mono[6,] <- paste("Overdose=", round(100 * example$Overdose.Mono), "\\%", sep="")
+output.table.mono[7,] <- paste("Target=", round(100 * example$Target.Prob.Mono), "\\%", sep="")
 
 # Construct Combination Therapy Table
 output.table.combo <- matrix(ncol=length(doses), nrow=7)
@@ -329,8 +333,8 @@ output.table.combo[2,] <- paste("n=", example$Data.Combo, sep="")
 output.table.combo[3,] <- paste("DLTs=", example$DLTs.Combo, sep="")
 output.table.combo[4,] <- paste("Mean Tox=", round(example$Toxicity.Est.Combo, 2), sep="")
 output.table.combo[5,] <- paste("95% CI=(", round(example$Lower.Combo, 2), ",", round(example$Upper.Combo, 2), ")", sep="")
-output.table.combo[6,] <- paste("Overdose=", round(100 * example$Overdose.Combo), "%", sep="")
-output.table.combo[7,] <- paste("Target=", round(100 * example$Target.Prob.Combo), "%", sep="")
+output.table.combo[6,] <- paste("Overdose=", round(100 * example$Overdose.Combo), "\\%", sep="")
+output.table.combo[7,] <- paste("Target=", round(100 * example$Target.Prob.Combo), "\\%", sep="")
 
 # View the tables
 print("Monotherapy Table")
