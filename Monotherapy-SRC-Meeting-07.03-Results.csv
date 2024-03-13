@@ -3,6 +3,6 @@
 "Patients","n=0","n=0","n=2","n=3","n=0","n=0","n=0"
 "DLTs","DLTs=0","DLTs=0","DLTs=0","DLTs=0","DLTs=0","DLTs=0","DLTs=0"
 "Mean Toxicity","Mean Tox=0.01","Mean Tox=0.01","Mean Tox=0.02","Mean Tox=0.04","Mean Tox=0.07","Mean Tox=0.12","Mean Tox=0.16"
-"95% CI","95% CI=(0,0.03)","95% CI=(0,0.06)","95% CI=(0,0.11)","95% CI=(0,0.19)","95% CI=(0,0.32)","95% CI=(0,0.5)","95% CI=(0.01,0.6)"
+"95% CI","95% CI=(0,0.03)","95% CI=(0,0.06)","95% CI=(0,0.11)","95% CI=(0,0.2)","95% CI=(0,0.32)","95% CI=(0,0.5)","95% CI=(0.01,0.6)"
 "Overdose Probability","Overdose=0%","Overdose=0%","Overdose=0%","Overdose=1%","Overdose=3%","Overdose=10%","Overdose=18%"
-"Target Probability","Target=0%","Target=0%","Target=0%","Target=2%","Target=5%","Target=10%","Target=13%"
+"Target Probability","Target=0%","Target=0%","Target=0%","Target=2%","Target=5%","Target=10%","Target=12%"

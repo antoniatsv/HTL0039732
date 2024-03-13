@@ -165,103 +165,145 @@ UCI.combo<-UCI[(length(doses)+1):(2*length(doses))]
 
 
 ###############################################################
-
-# Initialise variables for next dose recommendation and admissible doses
-next.dose.mono <- next.dose.combo <- 0
-admissible.doses.mono <- admissible.doses.combo <- numeric(0)
+coherence.up = T
+prediction = FALSE
+current.dose <- doses[4]
 
 # Decision logic based on MTD probabilities and overdose probabilities
 if(all(Pi.MTD.mono == 0) & all(Pi.MTD.combo == 0)){
   # If no dose levels are considered admissible for both mono and combo therapy, set stop to 1 and reset the next dose and admissible doses variables to 0
   stop <- 1
   next.dose.mono <- next.dose.combo <- 0
-  admissible.doses.mono <- admissible.doses.combo <- 0
+  admissible.doses.mono <- admissible.doses.combo <- c(0)
 } else {
-  # Process for monotherapy
-  if(any(Pi.MTD.mono > 0)){ #if any MTD prob for mono is >0, then find admissible doses and the next dose based on the maximum MTD prob
-    admissible.doses.mono <- doses[which(Pi.MTD.mono > 0)]
-    next.dose.mono <- doses[which.max(Pi.MTD.mono)]
-  }
-  if(all(Pi.MTD.mono == 0)){ #if all MTD probs are 0, then set the admissible doses and next dose for monotherapy to 0
-    admissible.doses.mono <- next.dose.mono <- 0
+  if(sum(s.mono)>0) {
+    increment<-2
+  }else{
+    increment<-3
   }
   
-  # Process for combination therapy
-  if(any(Pi.MTD.combo > 0)){
-    admissible.doses.combo <- doses[which(Pi.MTD.combo > 0)]
-    next.dose.combo <- doses[which.max(Pi.MTD.combo)]
+  if(all((no.DLT/N)>=1/3 & coherence.up)){
+    index <- which(doses>doses[current.dose])
+    Pi.MTD.mono[index]<-0
+  }else{
+    if(current.dose<(length(doses)-1)){
+      index <- (current.dose+2):length(doses)
+      Pi.MTD.mono[index]<-0
+    }
   }
-  if(all(Pi.MTD.combo == 0)){
-    admissible.doses.combo <- next.dose.combo <- 0
+  
+  admissible.doses.mono<-which(Pi.MTD.mono>0,arr=T)
+  next.dose.mono <- which.max(Pi.MTD.mono)
+  
+  if(all(Pi.MTD.mono==0)){
+    admissible.doses.mono<-next.dose<-0
   }
+  ###combo
+  index.1<-which(Pi.MTD.mono==0)
+  Pi.MTD.combo[index.1]<-0
+  
+  if(any(n.mono>=3)) {
+    index.2 <- max(which(n.mono>=3))
+    
+    if(index.2<length(doses)) {
+      index.3<-(min(index.2+1, length(doses)):length(doses))
+      Pi.MTD.combo[index.3] <-0
+    }
+  } else{
+    Pi.MTD.combo[1:length(doses)] <-0
+  }
+  
+  admissible.doses.combo<-which(Pi.MTD.combo>0, arr=T)
+  next.dose.combo<-which.max(Pi.MTD.combo)
+  
+  if(all(Pi.MTD.combo==0)){
+    admissible.doses.combo<-next.dose.combo<-0
+  }
+  
 }
+  
+  if(prediction){
+    d.predict<-seq(1, 30, 0.5)
+    combo.predict<-rep(0, length(d.predict))
+    Pi.MTD.predict<-Pi.above.predict<-toxicity.predict<-c()
+    
+    for (j in 1:length(d.predict)){
+      LP.predict <- a01 + a11 * log(d.predict[j]/D.ref) + a21 * combo.predict[j]
+      LP <- pmin(pmax(LP, -10), 10)
+      odds <- exp(LP)
+      Pi <- odds / (1 + odds)
+      Pi.MTD.predict[j]<- mean(Pi < 0.30) - mean(Pi < 0.20)
+      Pi.above.predict[j] <-  mean(Pi > 0.30)
+      toxicity.predict[j] <-mean(Pi)
+    }
+    
+    Pi.MTD.predict[which(Pi.above.predict>c.overdose)] <-0
+    
+    if(all((no.DLT/N)>=1/3 & coherence.up)) {
+      index<-which(d.predict>doses[current.dose])
+      Pi.MTD.predict[index]<-0
+    } else{
+      index <-which(d.predict>doses[current.dose+1])
+      Pi.MTD.predict[index]<-0
+    }
+    
+    admissible.doses.predict <-d.predict[which(Pi.MTD.predict>0,arr=T)]
+    
+  }
+  
 
-
-################################################################################
-# At the minute I don't have coherence constraints and no dose skipping! 
-# I need to write the logic on adjusting the next dose recommendation based on 
-# the presence of DLTs. 
-#                                                                              
-#                                                                              
-#                                                                              
-################################################################################
-
-prediction = FALSE
-
-
-if(!prediction){
-  output <- list(
-    NextDose.Mono = next.dose.mono,
-    Target.Prob.Mono = Pi.MTD.mono.store,
-    Target.Prob.Const.Mono = Pi.MTD.mono,
-    Overdose.Mono = Pi.above.mono,
-    Toxicity.Est.Mono = toxicity.mono,
-    no.DLT = no.DLT,
-    Admissible.Mono = admissible.doses.mono,
-    DLTs.Mono = s.mono,
-    Data.Mono = n.mono,
-    Lower.Mono = LCI.mono,
-    Upper.Mono = UCI.mono,
-    NextDose.Combo = next.dose.combo,
-    Target.Prob.Combo = Pi.MTD.combo.store,
-    Target.Prob.Const.Combo = Pi.MTD.combo,
-    Overdose.Combo = Pi.above.combo,
-    Toxicity.Est.Combo = toxicity.combo,
-    Admissible.Combo = admissible.doses.combo,
-    DLTs.Combo = s.combo,
-    Data.Combo = n.combo,
-    Lower.Combo = LCI.combo,
-    Upper.Combo = UCI.combo
-  )
-} else {
-  output <- list(
-    NextDose.Mono = next.dose.mono,
-    Target.Prob.Mono = Pi.MTD.mono.store,
-    Target.Prob.Const.Mono = Pi.MTD.mono,
-    Overdose.Mono = Pi.above.mono,
-    Toxicity.Est.Mono = toxicity.mono,
-    no.DLT = no.DLT,
-    Admissible.Mono = admissible.doses.mono,
-    DLTs.Mono = s.mono,
-    Data.Mono = n.mono,
-    Lower.Mono = LCI.mono,
-    Upper.Mono = UCI.mono,
-    NextDose.Combo = next.dose.combo,
-    Target.Prob.Combo = Pi.MTD.combo.store,
-    Target.Prob.Const.Combo = Pi.MTD.combo,
-    Overdose.Combo = Pi.above.combo,
-    Toxicity.Est.Combo = toxicity.combo,
-    Admissible.Combo = admissible.doses.combo,
-    DLTs.Combo = s.combo,
-    Data.Combo = n.combo,
-    Lower.Combo = LCI.combo,
-    Upper.Combo = UCI.combo,
-    Target.Prob.Predict = Pi.MTD.predict, 
-    Overdose.Predict = Pi.above.predict, 
-    Tox.Est.Predict = toxicity.predict, 
-    Admissible.Doses.Predict = admissible.doses.predict 
-  )
-}
+  if(!prediction){
+    output <- list(
+      NextDose.Mono = next.dose.mono,
+      Target.Prob.Mono = Pi.MTD.mono.store,
+      Target.Prob.Const.Mono = Pi.MTD.mono,
+      Overdose.Mono = Pi.above.mono,
+      Toxicity.Est.Mono = toxicity.mono,
+      no.DLT = no.DLT,
+      Admissible.Mono = admissible.doses.mono,
+      DLTs.Mono = s.mono,
+      Data.Mono = n.mono,
+      Lower.Mono = LCI.mono,
+      Upper.Mono = UCI.mono,
+      NextDose.Combo = next.dose.combo,
+      Target.Prob.Combo = Pi.MTD.combo.store,
+      Target.Prob.Const.Combo = Pi.MTD.combo,
+      Overdose.Combo = Pi.above.combo,
+      Toxicity.Est.Combo = toxicity.combo,
+      Admissible.Combo = admissible.doses.combo,
+      DLTs.Combo = s.combo,
+      Data.Combo = n.combo,
+      Lower.Combo = LCI.combo,
+      Upper.Combo = UCI.combo)
+    } else {
+        output <- list(
+          NextDose.Mono = next.dose.mono,
+          Target.Prob.Mono = Pi.MTD.mono.store,
+          Target.Prob.Const.Mono = Pi.MTD.mono,
+          Overdose.Mono = Pi.above.mono,
+          Toxicity.Est.Mono = toxicity.mono,
+          no.DLT = no.DLT,
+          Admissible.Mono = admissible.doses.mono,
+          DLTs.Mono = s.mono,
+          Data.Mono = n.mono,
+          Lower.Mono = LCI.mono,
+          Upper.Mono = UCI.mono,
+          NextDose.Combo = next.dose.combo,
+          Target.Prob.Combo = Pi.MTD.combo.store,
+          Target.Prob.Const.Combo = Pi.MTD.combo,
+          Overdose.Combo = Pi.above.combo,
+          Toxicity.Est.Combo = toxicity.combo,
+          Admissible.Combo = admissible.doses.combo,
+          DLTs.Combo = s.combo,
+          Data.Combo = n.combo,
+          Lower.Combo = LCI.combo,
+          Upper.Combo = UCI.combo,
+          Target.Prob.Predict = Pi.MTD.predict, 
+          Overdose.Predict = Pi.above.predict, 
+          Tox.Est.Predict = toxicity.predict, 
+          Admissible.Doses.Predict = admissible.doses.predict 
+        )
+      }
 
 example <- output
 
@@ -308,7 +350,6 @@ write.csv(output.table.combo, "Combination-SRC-Meeting-07.03.Results.csv", row.n
 ####
 output.table.mono.colour<-output.table.mono
 
-
 for(ii in 1:length(doses)){
   ttext<-output.table.mono[1,ii]
   if(example$Overdose.Mono[ii]>c.overdose){
@@ -328,15 +369,11 @@ for(ii in 1:length(doses)){
 }
 
 
-
-
-library("xtable")
-# Print Results Table in Latex Format (with colour coding)
-# Monotherapy
+####
+output.table.combo.colour<-output.table.combo
 print(xtable(output.table.mono.colour), sanitize.text.function = identity,include.rownames=FALSE,include.colnames=FALSE, size="\\tiny")
 
-# Generate a pdf with the colour-coded table
-# Requires Latex installed
+
 latex<-print(xtable(output.table.mono.colour,), sanitize.text.function = identity,include.rownames=FALSE,include.colnames=FALSE, size="\\normalsize")
 writeLines(
   c(
@@ -357,6 +394,41 @@ writeLines(
 
 
 ####
+for(ii in 1:length(doses)){
+  ttext<-output.table.combo[1,ii]
+  if(example$Overdose.Combo[ii]>c.overdose){
+    colour.name<-"coralred"
+  }else{
+    
+    if(example$Target.Prob.Const.Combo[ii]==0){
+      colour.name<-"azure"
+    }else{
+      colour.name<-"brightgreen"
+    }
+    
+  }
+  
+  ttext.col<-paste0("\\cellcolor{", colour.name, "}", ttext, "+Combo")
+  output.table.combo.colour[1,ii]<-ttext.col
+}
 
+print(xtable(output.table.combo.colour), sanitize.text.function = identity,include.rownames=FALSE,include.colnames=FALSE, size="\\tiny")
 
+latex<-print(xtable(output.table.combo.colour,), sanitize.text.function = identity,include.rownames=FALSE,include.colnames=FALSE, size="\\normalsize")
+writeLines(
+  c(
+    "\\documentclass[12pt]{article}",
+    "\\usepackage[landscape,left=10mm,right=20mm,top=60mm,bottom=20mm]{geometry}",
+    "\\usepackage[table]{xcolor}",
+    "\\usepackage{color}",
+    "\\definecolor{azure}{rgb}{0.0, 0.5, 1.0}",
+    "\\definecolor{brightgreen}{rgb}{0.4, 1.0, 0.0}",
+    "\\definecolor{coralred}{rgb}{1.0, 0.25, 0.25}",
+    "\\begin{document}",
+    "\\thispagestyle{empty}",
+    latex,
+    "\\end{document}"
+  ),
+  "table2.tex"
+)
 

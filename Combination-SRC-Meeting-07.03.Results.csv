@@ -4,5 +4,5 @@
 "DLTs","DLTs=0","DLTs=0","DLTs=0","DLTs=0","DLTs=0","DLTs=0","DLTs=0"
 "Mean Toxicity","Mean Tox=0.14","Mean Tox=0.17","Mean Tox=0.2","Mean Tox=0.25","Mean Tox=0.31","Mean Tox=0.38","Mean Tox=0.43"
 "95% CI","95% CI=(0,1)","95% CI=(0,1)","95% CI=(0,1)","95% CI=(0,1)","95% CI=(0,1)","95% CI=(0.01,1)","95% CI=(0.01,1)"
-"Overdose Probability","Overdose=15%","Overdose=17%","Overdose=21%","Overdose=26%","Overdose=34%","Overdose=45%","Overdose=53%"
-"Target Probability","Target=2%","Target=3%","Target=4%","Target=6%","Target=8%","Target=10%","Target=11%"
+"Overdose Probability","Overdose=14%","Overdose=17%","Overdose=21%","Overdose=26%","Overdose=34%","Overdose=45%","Overdose=53%"
+"Target Probability","Target=2%","Target=3%","Target=4%","Target=6%","Target=8%","Target=10%","Target=10%"
