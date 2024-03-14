@@ -168,7 +168,7 @@ UCI.combo<-UCI[(length(doses)+1):(2*length(doses))]
 ###############################################################
 coherence.up = T
 prediction = FALSE
-current.dose <- doses[4]
+current.dose <- 4
 
 # Decision logic based on MTD probabilities and overdose probabilities
 if(all(Pi.MTD==0)){
@@ -189,7 +189,7 @@ if(all(Pi.MTD==0)){
     index <- which(doses>doses[current.dose])
     Pi.MTD.mono[index]<-0
   }else{
-    #no dose skip
+    #no dose skip                            ##NB! it doesn't work for mono 
     if(current.dose<(length(doses)-1)){
       index <-(current.dose+2):length(doses)
       Pi.MTD.mono[index]<-0
@@ -321,7 +321,7 @@ output.table.mono[1,] <- paste(doses, "mg", sep="")
 output.table.mono[2,] <- paste("n=", example$Data.Mono, sep="")
 output.table.mono[3,] <- paste("DLTs=", example$DLTs.Mono, sep="")
 output.table.mono[4,] <- paste("Mean Tox=", round(example$Toxicity.Est.Mono, 2), sep="")
-output.table.mono[5,] <- paste("95% CI=(", round(example$Lower.Mono, 2), ",", round(example$Upper.Mono, 2), ")", sep="")
+output.table.mono[5,] <- paste("95\\%CI=(", round(example$Lower.Mono, 2), ",", round(example$Upper.Mono, 2), ")", sep="")
 output.table.mono[6,] <- paste("Overdose=", round(100 * example$Overdose.Mono), "\\%", sep="")
 output.table.mono[7,] <- paste("Target=", round(100 * example$Target.Prob.Mono), "\\%", sep="")
 
@@ -332,7 +332,7 @@ output.table.combo[1,] <- paste(doses, "mg", sep="")
 output.table.combo[2,] <- paste("n=", example$Data.Combo, sep="")
 output.table.combo[3,] <- paste("DLTs=", example$DLTs.Combo, sep="")
 output.table.combo[4,] <- paste("Mean Tox=", round(example$Toxicity.Est.Combo, 2), sep="")
-output.table.combo[5,] <- paste("95% CI=(", round(example$Lower.Combo, 2), ",", round(example$Upper.Combo, 2), ")", sep="")
+output.table.combo[5,] <- paste("95\\%CI=(", round(example$Lower.Combo, 2), ",", round(example$Upper.Combo, 2), ")", sep="")
 output.table.combo[6,] <- paste("Overdose=", round(100 * example$Overdose.Combo), "\\%", sep="")
 output.table.combo[7,] <- paste("Target=", round(100 * example$Target.Prob.Combo), "\\%", sep="")
 
@@ -374,7 +374,7 @@ for(ii in 1:length(doses)){
 
 
 ####
-output.table.combo.colour<-output.table.combo
+
 print(xtable(output.table.mono.colour), sanitize.text.function = identity,include.rownames=FALSE,include.colnames=FALSE, size="\\tiny")
 
 
@@ -398,6 +398,8 @@ writeLines(
 
 
 ####
+output.table.combo.colour<-output.table.combo
+
 for(ii in 1:length(doses)){
   ttext<-output.table.combo[1,ii]
   if(example$Overdose.Combo[ii]>c.overdose){
